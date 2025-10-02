@@ -73,13 +73,13 @@ def process_order():
     order_data = data.get('orderData')
 
     if not init_data or not order_data:
-        return jsonify({"error": "Отсутствуют initData или orderData"}), 400
+        return jsonify({"error": "initData or orderData is missing"}), 400
 
     # 1. Проверяем запрос, чтобы убедиться, что он действительно пришел от Telegram
     is_valid, user_data = is_valid_init_data(init_data, BOT_TOKEN)
 
     if not is_valid:
-        return jsonify({"error": "Неверные данные (initData)"}), 403
+        return jsonify({"error": "initData is invalid"}), 403
 
     # 2. Обрабатываем заказ
     try:
@@ -132,7 +132,7 @@ def process_order():
 
     except Exception as e:
         print(f"Ошибка при обработке заказа: {e}")
-        return jsonify({"error": "Произошла внутренняя ошибка"}), 500
+        return jsonify({"error": "Internal error"}), 500
 
 # Этот блок нужен для локального тестирования. На хостинге будет использоваться Gunicorn.
 # if __name__ == 'main':
