@@ -135,5 +135,5 @@ def process_order():
         return jsonify({"error": "Произошла внутренняя ошибка"}), 500
 
 # Этот блок нужен для локального тестирования. На хостинге будет использоваться Gunicorn.
-if __name__ == 'main':
-    app.run(debug=True, port=5001)
+# if __name__ == 'main':
+    # app.run(debug=True, port=5001)
