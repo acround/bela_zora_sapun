@@ -64,10 +64,6 @@ def is_valid_init_data(init_data: str, bot_token: str) -> (bool, dict):
 # --- API эндпоинт для обработки заказов ---
 @app.route('/process-order', methods=['POST'])
 def process_order():
-    """
-    Получает данные о заказе из WebApp, проверяет их
-    и отправляет пользователю сообщение с подтверждением.
-    """
     data = request.json
     init_data = data.get('initData')
     order_data = data.get('orderData')
@@ -75,22 +71,18 @@ def process_order():
     if not init_data or not order_data:
         return jsonify({"error": "initData or orderData is missing"}), 400
 
-    # 1. Проверяем запрос, чтобы убедиться, что он действительно пришел от Telegram
     is_valid, user_data = is_valid_init_data(init_data, BOT_TOKEN)
 
     if not is_valid:
         return jsonify({"error": "initData is invalid"}), 403
 
-    # 2. Обрабатываем заказ
     try:
         user_id = user_data.get('id')
         user_name = user_data.get('first_name', 'Уважаемый клиент')
-        
+
         items = order_data.get('items', {})
         total = order_data.get('total', 0)
 
-        # ВАЖНО: Это "заглушка" с названиями товаров.
-        # В реальном приложении вы должны получать названия из вашей базы данных по ID.
         product_names = {
             1: "Классическое козье молоко",
             2: "Овсянка и мед",
@@ -98,41 +90,37 @@ def process_order():
             4: "Угольный детокс"
         }
 
-        # 3. Формируем сообщение для подтверждения заказа
         message_lines = [
             f"🎉 Спасибо, {user_name}! Ваш заказ принят.",
             "---",
-            "Детали заказа:",
+            "Детали заказа:"
         ]
 
         for product_id, quantity in items.items():
-            # Ключ из JS будет строкой, преобразуем в число
-            product_id_int = int(product_id)
-            name = product_names.get(product_id_int, f"Товар #{product_id_int}")
+            pid = int(product_id)
+            name = product_names.get(pid, f"Товар #{pid}")
             message_lines.append(f"• {name} x {quantity}")
-        
+
         message_lines.append("---")
         message_lines.append(f"Итого: {total} RSD")
-        message_lines.append("\nМы скоро свяжемся с вами для уточнения деталей доставки.")
-        
+        message_lines.append("Мы скоро свяжемся с вами для уточнения доставки.")
+
         final_message = "\n".join(message_lines)
-        # 4. Отправляем сообщение пользователю через бота
-        # Используем asyncio для асинхронной отправки
+
         async def send_confirmation():
-            await bot.send_message(
-                chat_id=user_id,
-                text=final_message,
-                parse_mode='Markdown'
-            )
-        
-        asyncio.run(send_confirmation())
-        
-        # 5. Отправляем успешный ответ в WebApp
-        return jsonify({"status": "success", "message": "Заказ обработан"}), 200
+            await bot.send_message(chat_id=user_id, text=final_message)
+
+        # Асинхронный вызов без конфликта с Flask event loop
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(send_confirmation())
+        loop.close()
+
+        return jsonify({"status": "success", "message": "Заказ успешно размещён!"}), 200
 
     except Exception as e:
-        print(f"Ошибка при обработке заказа: {e}")
-        return jsonify({"error": "Internal error"}), 500
+        print(f"[Ошибка сервера при заказе]: {e}")
+        return jsonify({"error": "Internal server error"}), 500
 
 # Этот блок нужен для локального тестирования. На хостинге будет использоваться Gunicorn.
 # if __name__ == 'main':
