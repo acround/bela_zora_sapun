@@ -3,7 +3,7 @@ import json
 import hmac
 import hashlib
 from urllib.parse import unquote, parse_qs
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from telegram import Bot
 import asyncio
 
@@ -18,6 +18,18 @@ if not BOT_TOKEN:
 app = Flask(__name__)
 bot = Bot(token=BOT_TOKEN)
 
+@app.route('/')
+def serve_index():
+    return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/<path:path>')
+def serve_static(path):
+    return send_from_directory(app.static_folder, path)
+
+@app.route('/process-order', methods=['POST'])
+def process_order():
+    # Логика обработки заказа (ваша версия здесь)
+    return jsonify({"status": "success"})
 
 # --- Безопасность: Валидация данных от Telegram WebApp ---
 def is_valid_init_data(init_data: str, bot_token: str) -> (bool, dict):
