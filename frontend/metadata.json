@@ -1,0 +1,7 @@
+{
+  "name": "Bela Zora Sapun - Handmade Soap",
+  "description": "A shop for natural, handmade goat's milk soap, featuring a home page with the latest updates, popular items, news, promotions, and a personal account.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
